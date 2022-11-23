@@ -11,8 +11,8 @@ BITS_PER_SECOND = 30
 class Note:
     def __init__(self, note, start, end, velocity=128):
         self.note = note
-        self.start = math.floor(start * BITS_PER_SECOND)
-        self.end = math.floor(end * BITS_PER_SECOND)
+        self.start = math.floor(start)
+        self.end = math.floor(end)
         self.velocity = velocity
 
     def __repr__(self):
@@ -37,7 +37,7 @@ def midi_to_notes(midi: mido.MidiFile) -> List[Note]:
         elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
             if msg.note in pressed.keys():
                 start, velocity = pressed.pop(msg.note)
-                res.append(Note(msg.note, start, timing, velocity))
+                res.append(Note(msg.note, start * BITS_PER_SECOND, timing * BITS_PER_SECOND, velocity))
     return res
 
 

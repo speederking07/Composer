@@ -3,7 +3,7 @@ from typing import List, Tuple, Iterator
 
 from notes import Note, BITS_PER_SECOND, midi_to_notes, load_midi
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 class KeyStatus(Enum):
@@ -32,6 +32,7 @@ def apply_status(prev: Vector, status: PianoStatus) -> Vector:
 
 def status_generator(notes_list: List[Note]) -> Iterator[PianoStatus]:
     previous_active = set()
+    notes_list = sorted(notes_list, key=lambda x: x.start)
     for i in range(max(map(lambda x: x.end, notes_list))):
         notes_played = []
         result = [KeyStatus.RELEASED for _ in range(128)]
@@ -66,14 +67,4 @@ def vectorized_notes(notes_list: List[Note]) -> Tuple[List[PianoStatus], List[Ve
         current_vector = apply_status(current_vector, stat)
     return status_res, vec_res
 
-
-if __name__ == "__main__":
-    midi = load_midi("midi/again.mid")
-    notes = midi_to_notes(midi)
-    stats, vec = vectorized_notes(notes)
-    y = np.array(vec)[:, 51]
-    print(y.max())
-    x = np.arange(0, len(vec))
-    plt.plot(x, y)
-    plt.show()
 
