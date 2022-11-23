@@ -22,6 +22,10 @@ class Note:
         return self.__repr__()
 
 
+def load_midi(path: str) -> mido.MidiFile:
+    return mido.MidiFile(path)
+
+
 def midi_to_notes(midi: mido.MidiFile) -> List[Note]:
     timing = 0.0
     pressed = {}
