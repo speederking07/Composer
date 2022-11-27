@@ -5,7 +5,7 @@ import mido
 
 import pygame as pg
 
-BITS_PER_SECOND = 30
+BITS_PER_SECOND = 24
 
 
 class Note:

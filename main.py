@@ -1,10 +1,12 @@
+from datetime import datetime
+
 import mido
 import pygame as pg
 
 from composer import compose_music, statuses_to_notes
 from keyboard import get_sound_keys
 from notes import midi_to_notes, play_notes, BITS_PER_SECOND, load_midi
-from vectorization import vectorized_notes
+from vectorization import vectorized_notes, load_folder, save_data_to_file, load_data_from_file
 from visualisation import draw_falling_notes, draw_piano
 
 pg.init()
@@ -16,11 +18,13 @@ screen = pg.display.set_mode((WIDTH, HEIGHT))
 timer = pg.time.Clock()
 
 if __name__ == '__main__':
-    midi = load_midi("midi/again.mid")
-    notes = midi_to_notes(midi)
+    # midi = load_midi("midi/for_river.mid")
+    # notes = midi_to_notes(midi)
 
-    stats, vec = vectorized_notes(notes)
-    comp_notes = compose_music(vec, stats, length=30*BITS_PER_SECOND)
+    # stats, vec, names = load_folder('midi/classic/bach')
+    stats, vec, names = load_data_from_file(f"classic-{BITS_PER_SECOND}.data")
+    print("ripped")
+    comp_notes = compose_music(vec, stats, names, length=2 * 60 * BITS_PER_SECOND)
     # comp_notes = statuses_to_notes(stats)
 
     notes_display = sorted(comp_notes, key=lambda x: x.start)
