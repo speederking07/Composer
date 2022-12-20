@@ -98,7 +98,7 @@ def load_data_from_file(filename: str) -> Tuple[List[PianoStatus], List[Vector],
             split = line.split(';')
             stats.append(list(map(lambda x: KeyStatus(x), json.loads(split[0]))))
             vectors.append(np.array(json.loads(split[1]), dtype=np.float32))
-            names.append(str[2])
+            names.append(split[2])
     return stats, vectors, names
 
 

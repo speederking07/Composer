@@ -27,16 +27,17 @@ def gen_convolve(x: np.ndarray, y: np.ndarray, op, zipper) -> np.ndarray:
 
 @jit(nopython=True)
 def maxvolve(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    n = x.shape[0] + y.shape[0] - 1
-    res = np.zeros(x.shape[0])
-    for i in range(y.shape[0] // 2, x.shape[0] + y.shape[0] // 2):
-        offset = max(0, i - x.shape[0] + 1)
+    x_size = x.shape[0]
+    y_size = y.shape[0]
+    res = np.zeros(x_size)
+    for i in range(y_size // 2, x_size + y_size // 2):
+        offset = max(0, i - x_size + 1)
         x_pos = i - offset - 1
         y_pos = offset + 1
         tmp = x[x_pos + 1] * y[y_pos - 1]
-        while x_pos >= 0 and y_pos < y.shape[0]:
+        while x_pos >= 0 and y_pos < y_size:
             tmp = max(tmp, x[x_pos] * y[y_pos])
             x_pos -= 1
             y_pos += 1
-        res[i] = tmp
+        res[i - y_size // 2] = tmp
     return res
