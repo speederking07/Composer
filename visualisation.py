@@ -1,7 +1,8 @@
+import math
 from typing import Set, List
 
 from keyboard import position_of_note, into_blacks_and_whites, black_pos, is_white
-from notes import Note
+from notes import Note, BITS_PER_SECOND
 import pygame as pg
 
 __all__ = ['draw_falling_notes', 'draw_piano']
@@ -13,8 +14,8 @@ def draw_falling_notes(screen: pg.Surface, notes: List[Note], frame):
     notes_played = []
     for note in notes:
         key = note.note
-        start_pos = -note.start + frame
-        length = note.end - note.start
+        start_pos = math.floor(-note.start * BITS_PER_SECOND + frame)
+        length = math.floor(note.length * BITS_PER_SECOND)
         if start_pos < 0:
             break
         if start_pos - length > screen.get_height():
