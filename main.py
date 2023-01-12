@@ -19,8 +19,9 @@ screen = pg.display.set_mode((WIDTH, HEIGHT))
 timer = pg.time.Clock()
 
 if __name__ == '__main__':
-    # midi = load_midi("midi/gate.mid ")
+    # midi = load_midi("output/composer-2023_01_11_15_06_35.mid")
     # notes = midi_to_notes(midi)
+    # comp_notes = notes
     # accords = notes_to_accords(notes)
     # processed = accords_to_notes(accords)
 

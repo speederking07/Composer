@@ -18,15 +18,15 @@ class NoteLength(IntEnum):
 
 
 class AccordFlag(IntFlag):
-    METRO_CHANGE = 1,
+    METRE_CHANGE = 1,
     TEMPO_CHANGE = 2,
     START = 4,
     END = 8,
 
 
 class Accord:
-    def __init__(self, metro: Tuple[int, int], tempo: float, notes: list[Tuple[int, NoteLength]], length: float, wait: float | None, flags: int):
-        self.metro = metro
+    def __init__(self, metre: Tuple[int, int], tempo: float, notes: list[Tuple[int, NoteLength]], length: float, wait: float | None, flags: int):
+        self.metre = metre
         self.tempo = tempo
         self.notes = notes
         self.length = length
@@ -44,7 +44,7 @@ def note_to_length(n: Note) -> NoteLength:
 
 def single_accord(notes: list[Note], next_note: Note | None, prev: float | None) -> Accord:
     flag = AccordFlag(0)
-    metro = notes[0].metro
+    metre = notes[0].metre
     tempo = notes[0].tempo
     wait = None
     length = 1.0
@@ -60,15 +60,15 @@ def single_accord(notes: list[Note], next_note: Note | None, prev: float | None)
         wait = (notes[0].start - prev) / notes[0].tempo
         if next_note.tempo != notes[0].tempo:
             flag |= AccordFlag.TEMPO_CHANGE
-        if next_note.metro != notes[0].metro:
-            flag |= AccordFlag.METRO_CHANGE
+        if next_note.metre != notes[0].metre:
+            flag |= AccordFlag.METRE_CHANGE
 
     accord_notes = []
     for n in notes:
         if n.length > 0.01:
             accord_notes.append((n.note, note_to_length(n)))
 
-    return Accord(metro, tempo, accord_notes, length, wait, flag)
+    return Accord(metre, tempo, accord_notes, length, wait, flag)
 
 
 def notes_to_accords(notes: list[Note]) -> list[Accord]:
@@ -95,7 +95,7 @@ def accords_to_notes(accords: list[Accord]) -> list[Note]:
     time = 0.0
     for a in accords:
         for (note, length) in a.notes:
-            res.append(Note(note, time, 2 ** length * a.tempo, a.tempo, a.metro, 64))
+            res.append(Note(note, time, 2 ** length * a.tempo, a.tempo, a.metre, 64))
         time += a.length * a.tempo
 
     return res
@@ -112,6 +112,7 @@ def save_accords(accords: list[Accord], name: str | None = None, path: str = 'ou
     time = 0.0
     msgs = []
     prev_tempo = None
+    prev_metre = None
 
     track.append(MetaMessage('track_name', name=name, time=0))
     track.append(MetaMessage('instrument_name', name='python_composer', time=0))
@@ -120,6 +121,9 @@ def save_accords(accords: list[Accord], name: str | None = None, path: str = 'ou
         if a.tempo != prev_tempo:
             prev_tempo = a.tempo
             msgs.append((time, a.tempo, MetaMessage('set_tempo', tempo=int(a.tempo * 1000000))))
+        if a.metre != prev_metre:
+            prev_metre = a.metre
+            msgs.append((time, a.tempo, MetaMessage('time_signature', numerator=a.metre[0], denominator=a.metre[1])))
         for (note, length) in a.notes:
             msgs.append((time, a.tempo, Message('note_on', note=note, velocity=64)))
             msgs.append((time + 2 ** length * a.tempo, a.tempo, Message('note_off', note=note, velocity=0)))
@@ -129,7 +133,7 @@ def save_accords(accords: list[Accord], name: str | None = None, path: str = 'ou
 
     prev = 0.0
     for (time, tempo, msg) in sorted(msgs, key=lambda x: x[0]):
-        msg.time = second2tick(time - prev, mid.ticks_per_beat, tempo * 1000000)
+        msg.time = int(second2tick(time - prev, mid.ticks_per_beat, tempo * 1000000))
         track.append(msg)
         prev = time
 

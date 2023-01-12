@@ -3,7 +3,7 @@ from typing import List, Tuple, Iterator
 
 from scipy.spatial.distance import cdist
 
-from accord import Accord, accords_to_notes, AccordFlag
+from accord import Accord, accords_to_notes, AccordFlag, save_accords
 from convolutions import get_gaussian_convolution, maxvolve
 from notes import Note
 from vectorization import Vector, apply_accord, empty_vector
@@ -41,7 +41,7 @@ def convolve(x: Vector) -> Vector:
     r0 = maxvolve(x[0], CONVOLUTION)
     r1 = maxvolve(x[1], CONVOLUTION)
     r2 = maxvolve(x[2], CONVOLUTION)
-    return r0, r1, r2
+    return np.array([r0, r1, r2])
 
 
 def music_generator(known_vec: List[Vector], known_accords: List[Accord], known_names: List[str])\
@@ -51,7 +51,7 @@ def music_generator(known_vec: List[Vector], known_accords: List[Accord], known_
     print("convoluted")
     prev = 0
     tempo = None
-    pressed = {}
+    pressed = np.zeros(128)
     while True:
         selected, confidence = select_bit(convolve(vector), known_vec)
         if confidence < PANIC_THRESHOLD:
@@ -61,7 +61,7 @@ def music_generator(known_vec: List[Vector], known_accords: List[Accord], known_
         prev = selected
         accord_played = known_accords[selected]
         if tempo is None:
-            tempo = accord_played.tempo + np.random.normal(0, 0.05)
+            tempo = np.random.lognormal(accord_played.tempo, 0.1)
         accord_played.tempo = tempo
         if AccordFlag.TEMPO_CHANGE in accord_played.flags or accord_played.length > 12.0:
             tempo = None
@@ -82,6 +82,6 @@ def compose_music(known_vec: List[Vector], known_accords: List[Accord], known_na
             break
         if length is not None and time > length:
             break
-    states = list(islice(mg, length))
-    return accords_to_notes(states)
+    save_accords(res)
+    return accords_to_notes(res)
 

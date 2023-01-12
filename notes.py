@@ -9,13 +9,13 @@ BITS_PER_SECOND = 60
 
 
 class Note:
-    def __init__(self, note, start, length, tempo=0.5, metro=(4, 4), velocity=64):
+    def __init__(self, note, start, length, tempo=0.5, metre=(4, 4), velocity=64):
         self.note = note
         self.start = start
         self.length = length
         self.end = start + length
         self.tempo = tempo
-        self.metro = metro
+        self.metre = metre
         self.velocity = velocity
 
     def __repr__(self):
@@ -32,21 +32,21 @@ def load_midi(path: str) -> mido.MidiFile:
 def midi_to_notes(midi: mido.MidiFile) -> List[Note]:
     timing = 0.0
     tempo = 0.5
-    metro = 4, 4
+    metre = 4, 4
     pressed = {}
     res = []
     for msg in midi:
         timing += msg.time
         if msg.type == "time_signature":
-            metro = msg.numerator, msg.denominator
+            metre = msg.numerator, msg.denominator
         if msg.type == "set_tempo":
             tempo = msg.tempo / 1000000
         if msg.type == 'note_on' and msg.velocity > 0:
-            pressed[msg.note] = timing, msg.velocity, tempo, metro
+            pressed[msg.note] = timing, msg.velocity, tempo, metre
         elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
             if msg.note in pressed.keys():
-                start, velocity, tempo, metro = pressed.pop(msg.note)
-                res.append(Note(msg.note, start, timing - start, tempo, metro, velocity))
+                start, velocity, tempo, metre = pressed.pop(msg.note)
+                res.append(Note(msg.note, start, timing - start, tempo, metre, velocity))
     return res
 
 

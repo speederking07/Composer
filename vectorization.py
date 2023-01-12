@@ -1,5 +1,5 @@
 import os
-from enum import Enum
+from numba import jit
 from typing import List, Tuple, Dict
 
 
@@ -8,28 +8,28 @@ from notes import Note, midi_to_notes, load_midi
 import numpy as np
 
 # Long memory, short memory, cumulative memory
-Vector = Tuple[np.ndarray[np.float32], np.ndarray[np.float32], np.ndarray[np.float32]]
+Vector = np.ndarray[np.float32]
 
-LONG_HELD_FACTOR = 0.95
-LONG_RELEASED_FACTOR = 0.7
+LONG_HELD_FACTOR = 0.9
+LONG_RELEASED_FACTOR = 0.75
 
-SHORT_HELD_FACTOR = 0.5
-SHORT_RELEASED_FACTOR = 0.3
+SHORT_HELD_FACTOR = 0.4
+SHORT_RELEASED_FACTOR = 0.2
 
 CUMULATIVE_INCREMENT = 0.25
-CUMULATIVE_HELD_FACTOR = 0.6
-CUMULATIVE_RELEASED_FACTOR = 0.4
+CUMULATIVE_HELD_FACTOR = 0.8
+CUMULATIVE_RELEASED_FACTOR = 0.6
 
 
 def empty_vector() -> Vector:
-    return np.zeros(128, dtype=np.float32), np.zeros(128, dtype=np.float32), np.zeros(128, dtype=np.float32)
+    return np.zeros((3, 128), dtype=np.float32)
 
 
 def copy_vector(v: Vector) -> Vector:
-    return v[0].copy(), v[1].copy(), v[2].copy()
+    return v.copy()
 
 
-def apply_accord(accord: Accord, pressed: Dict[int, float], v: Vector) -> Tuple[Dict[int, float], Vector]:
+def apply_accord(accord: Accord, pressed: np.ndarray, v: Vector) -> Tuple[np.ndarray, Vector]:
     new_notes = map(lambda note: (note[0], 2 ** note[1]), accord.notes)
     length = accord.length
 
@@ -39,30 +39,39 @@ def apply_accord(accord: Accord, pressed: Dict[int, float], v: Vector) -> Tuple[
         v[2][n] = min(v[2][n] + CUMULATIVE_INCREMENT, 1)
         pressed[n] = l
 
-    for i in range(128):
-        if i in pressed:
-            held = min(length, pressed[i])
-            released = length - held
-            v[0][i] *= LONG_HELD_FACTOR ** held * LONG_RELEASED_FACTOR ** released
-            v[1][i] *= SHORT_HELD_FACTOR ** held * SHORT_RELEASED_FACTOR ** released
-            v[2][i] *= CUMULATIVE_HELD_FACTOR ** held * CUMULATIVE_RELEASED_FACTOR ** released
-            if released > 0.01:
-                pressed[i] -= length
-            if pressed[i] <= 0.01:
-                pressed.pop(i)
-        else:
-            v[0][i] *= LONG_RELEASED_FACTOR ** length
-            v[1][i] *= SHORT_RELEASED_FACTOR ** length
-            v[2][i] *= CUMULATIVE_RELEASED_FACTOR ** length
+    held = np.amin(np.array([pressed, length * np.ones(128)]), axis=0)
+    released = length - held
 
-    return pressed, v
+    v[0] = v[0] * LONG_HELD_FACTOR ** held * LONG_RELEASED_FACTOR ** released
+    v[1] = v[1] * SHORT_HELD_FACTOR ** held * SHORT_RELEASED_FACTOR ** released
+    v[2] = v[2] * CUMULATIVE_HELD_FACTOR ** held * CUMULATIVE_RELEASED_FACTOR ** released
+
+    new_pressed = np.amax(np.array([pressed - length, np.zeros(128)]), axis=0)
+
+    # for i in range(128):
+    #     if i in pressed:
+    #         held = min(length, pressed[i])
+    #         released = length - held
+    #         v[0][i] *= LONG_HELD_FACTOR ** held * LONG_RELEASED_FACTOR ** released
+    #         v[1][i] *= SHORT_HELD_FACTOR ** held * SHORT_RELEASED_FACTOR ** released
+    #         v[2][i] *= CUMULATIVE_HELD_FACTOR ** held * CUMULATIVE_RELEASED_FACTOR ** released
+    #         if released > 0.01:
+    #             pressed[i] -= length
+    #         if pressed[i] <= 0.01:
+    #             pressed.pop(i)
+    #     else:
+    #         v[0][i] *= LONG_RELEASED_FACTOR ** length
+    #         v[1][i] *= SHORT_RELEASED_FACTOR ** length
+    #         v[2][i] *= CUMULATIVE_RELEASED_FACTOR ** length
+
+    return new_pressed, v
 
 
 def vectorize_notes(notes_list: List[Note]) -> Tuple[List[Accord], List[Vector]]:
     vector = empty_vector()
     vec_res = []
     status_res = []
-    pressed = {}
+    pressed = np.zeros(128)
     for accord in notes_to_accords(notes_list):
         vec_res.append(copy_vector(vector))
         status_res.append(accord)
