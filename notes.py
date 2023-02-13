@@ -9,6 +9,9 @@ BITS_PER_SECOND = 60
 
 
 class Note:
+    """
+    Class representing single note.
+    """
     def __init__(self, note, start, length, tempo=0.5, metre=(4, 4), velocity=64):
         self.note = note
         self.start = start
@@ -26,10 +29,19 @@ class Note:
 
 
 def load_midi(path: str) -> mido.MidiFile:
+    """
+    Loads midi file.
+    """
     return mido.MidiFile(path)
 
 
 def midi_to_notes(midi: mido.MidiFile) -> List[Note]:
+    """
+    Converts midi file to a list of `Note`\\s.
+
+    :param midi: Midi file to be converted.
+    :return: List of notes played in midi file.
+    """
     timing = 0.0
     tempo = 0.5
     metre = 4, 4
@@ -51,6 +63,16 @@ def midi_to_notes(midi: mido.MidiFile) -> List[Note]:
 
 
 def play_notes(notes: List[Note], sounds: Dict[int, pg.mixer.Sound], active: Set[int], frame: int) -> Set[int]:
+    """
+    Function playing all notes in list.
+
+    :param notes: Notes to be played.
+    :param sounds: Dictionary containing sounds of piano keys.
+    :param active: Set of previously pressed keys.
+    :param frame: Number of frame to be played. (to be consistent with display)
+    :return: Set of currently pressed keys.
+    """
+
     current = set()
     notes_played = []
     for note in notes:

@@ -8,7 +8,15 @@ import pygame as pg
 __all__ = ['draw_falling_notes', 'draw_piano']
 
 
-def draw_falling_notes(screen: pg.Surface, notes: List[Note], frame):
+def draw_falling_notes(screen: pg.Surface, notes: List[Note], frame: int):
+    """
+    Procedure drawing falling notes
+
+    :param screen: PyGame screen to be drawn on.
+    :param notes: List of notes to be drawn.
+    :param frame: Number of frame to be drawn. Determinate position of notes.
+    """
+
     visible_whites = []
     visible_blacks = []
     notes_played = []
@@ -36,6 +44,13 @@ def draw_falling_notes(screen: pg.Surface, notes: List[Note], frame):
 
 
 def draw_piano(pressed: Set[int], screen: pg.Surface):
+    """
+    Procedure drawing piano keys
+
+    :param pressed: Set of buttons pressed.
+    :param screen: PyGame screen to be drawn on.
+    """
+
     whites, blacks = into_blacks_and_whites(pressed)
     white_rects = []
     for i in range(52):

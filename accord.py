@@ -1,6 +1,6 @@
 from datetime import datetime
 import math
-from enum import IntFlag, auto, IntEnum
+from enum import IntFlag, IntEnum
 from typing import Tuple
 
 from mido import MidiFile, MidiTrack, MetaMessage, Message, second2tick
@@ -9,15 +9,22 @@ from notes import Note
 
 
 class NoteLength(IntEnum):
+    """
+    Enum of add notes length used in music.
+    """
+
     FULL = 2,
     HALF = 1,
-    QUARTER = 0,
+    QUARTER = 0,  # as tempo is expressed in quoter notes unit
     EIGHTH = -1,
     SIXTEENTH = -2,
     THIRTY_SECOND = -3,
 
 
 class AccordFlag(IntFlag):
+    """
+    Extra accord flags.
+    """
     METRE_CHANGE = 1,
     TEMPO_CHANGE = 2,
     START = 4,
@@ -25,6 +32,9 @@ class AccordFlag(IntFlag):
 
 
 class Accord:
+    """
+    Class representing single accord of music piece.
+    """
     def __init__(self, metre: Tuple[int, int], tempo: float, notes: list[Tuple[int, NoteLength]], length: float, wait: float | None, flags: int):
         self.metre = metre
         self.tempo = tempo
@@ -35,6 +45,9 @@ class Accord:
 
 
 def note_to_length(n: Note) -> NoteLength:
+    """
+    Calculates note length based on duration and tempo.
+    """
     l = math.log2(n.length / n.tempo)
     for e in NoteLength:
         if l > float(e) - 0.5:
@@ -43,6 +56,10 @@ def note_to_length(n: Note) -> NoteLength:
 
 
 def single_accord(notes: list[Note], next_note: Note | None, prev: float | None) -> Accord:
+    """
+    Function converting list of simultaneously played notes into single accord.
+    """
+
     flag = AccordFlag(0)
     metre = notes[0].metre
     tempo = notes[0].tempo
@@ -72,6 +89,10 @@ def single_accord(notes: list[Note], next_note: Note | None, prev: float | None)
 
 
 def notes_to_accords(notes: list[Note]) -> list[Accord]:
+    """
+    Converts list of notes into list of accords played.
+    """
+
     prev = None
     accord_notes = []
     result = []
@@ -91,6 +112,10 @@ def notes_to_accords(notes: list[Note]) -> list[Accord]:
 
 
 def accords_to_notes(accords: list[Accord]) -> list[Note]:
+    """
+    Function converting list of accords into list of notes.
+    """
+
     res = []
     time = 0.0
     for a in accords:
@@ -101,13 +126,24 @@ def accords_to_notes(accords: list[Accord]) -> list[Note]:
     return res
 
 
-def save_accords(accords: list[Accord], name: str | None = None, path: str = 'output'):
+def save_accords(accords: list[Accord], basename: str | None = None, name: str | None = None, path: str = 'output'):
+    """
+    Procedure saving accords as midi file.
+
+    :param accords: Accords of track to be saved.
+    :param basename: Base name of track.
+    :param name: Full name of track.
+    :param path: Path to folder where track should be saved.
+    """
     mid = MidiFile()
     track = MidiTrack()
     mid.tracks.append(track)
 
     if name is None:
-        name = f"composer-{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}"
+        if basename is None:
+            name = f"composer-{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}"
+        else:
+            name = f"{basename}-{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}"
 
     time = 0.0
     msgs = []

@@ -3,13 +3,30 @@ import numpy as np
 from numba import jit
 
 
-def get_gaussian_convolution(length: int, sigma=1) -> np.ndarray[np.float32]:
+def get_gaussian_curve(length: int, sigma=1) -> np.ndarray[np.float32]:
+    """
+    Returns array with values of gaussian curve, with mean in middle of array.
+
+    :param length: Length of array.
+    :param sigma: Standard deviation of distribution.
+    :return: Array with values of gaussian curve.
+    """
+
     x = np.arange(-length / 2 + 0.5, length / 2 + 1)
     y = scipy.stats.norm.pdf(x, scale=sigma)
     return y / np.max(y)
 
 
 def gen_convolve(x: np.ndarray, y: np.ndarray, op, zipper) -> np.ndarray:
+    """
+    Generalized convolution operation.
+    :param x: First vector.
+    :param y: Second vector.
+    :param op: Function of two elements of each vector.
+    :param zipper: Function combining results in single position.
+    :return: Convoluted vector.
+    """
+
     n = x.shape[0] + y.shape[0] - 1
     res = np.zeros(n)
     for i in range(n):
@@ -27,6 +44,10 @@ def gen_convolve(x: np.ndarray, y: np.ndarray, op, zipper) -> np.ndarray:
 
 @jit(nopython=True)
 def maxvolve(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """
+    Performs convolution of two vectors but with addition replaced by maximum operation.
+    """
+
     x_size = x.shape[0]
     y_size = y.shape[0]
     res = np.zeros(x_size)

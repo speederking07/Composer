@@ -33,20 +33,39 @@ keys = {i + 21: pg.mixer.Sound(f'notes/{piano_notes[i]}.wav') for i in range(len
 
 
 def into_blacks_and_whites(list_of_keys: Iterable[int]) -> Tuple[List[int], List[int]]:
+    """
+    Divides list of key ids into blacks and whites lists of its positions.
+    """
     whites = list(map(lambda x: x - 1, filter(lambda x: x > 0, [keys_color[i] for i in list_of_keys])))
     blacks = list(map(lambda x: -x - 1, filter(lambda x: x < 0, [keys_color[i] for i in list_of_keys])))
     return whites, blacks
 
 
 def get_sound_keys() -> Dict[int, pg.mixer.Sound]:
+    """
+    Returns dictionary of key ids with corresponding piano sounds
+    """
     return keys
 
 
 def is_white(note: int) -> bool:
+    """
+    Calculates color of key.
+
+    :param note: Id of key.
+    :return: If is white then true, false if it is black.
+    """
     return keys_color[note] > 0
 
 
 def position_of_note(note: int) -> Tuple[int, int]:
+    """
+    Calculates position of key on piano. For displaying purposes.
+
+    :param note: Id of key.
+    :return: A pair of key position and it's width
+    """
+
     key_pos = keys_color[note]
     if key_pos > 0:
         return (key_pos - 1) * 35 + 2, 31
